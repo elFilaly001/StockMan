@@ -102,7 +102,7 @@ export default function BarcodeScanner() {
         }
       });
     } else {
-      console.log(`Added ${newProduct.stock.quantity} of ${currentProduct.name} - ${currentProduct.supplier}`);
+      console.log(`Added ${newProduct.stock.quantity} of ${currentProduct.name} - ${currentProduct.supplier} , id: ${currentProduct.id}`);
       await updateStock(currentProduct , newProduct.stock.quantity)
     }
     setModalVisible(false);

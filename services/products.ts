@@ -55,7 +55,7 @@ const deleteProduct = async (product: any) => {
 const updateStock = async (product: any, stock: any) => {
    const foundProduct = await getProductByBarcode_stock(product.barcode, product.stock.id);
    if (foundProduct.status) {
-    foundProduct.product.stock.quantity += stock.quantity;
+    foundProduct.product.stock.quantity += stock;
     await updateProduct(foundProduct.product);
    }
 }
