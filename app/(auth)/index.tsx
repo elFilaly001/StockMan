@@ -85,31 +85,31 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 30,
-        backgroundColor: '#f8f9fa',  // Light gray background
+        backgroundColor: '#f8f9fa',  
     },
     title: {
         fontSize: 36,
         marginBottom: 40,
         fontWeight: '800',
-        color: '#2d3436',  // Dark gray, almost black
+        color: '#2d3436',  
         letterSpacing: 1,
-        fontFamily: 'System',  // You can replace with your preferred font
+        fontFamily: 'System',  
     },
     input: {
         height: 50,
         width: '100%',
-        borderColor: '#b2bec3',  // Softer border color
+        borderColor: '#b2bec3',  
         borderWidth: 1.5,
         borderRadius: 12,
         paddingHorizontal: 15,
         marginBottom: 25,
         fontSize: 16,
         backgroundColor: 'white',
-        color: '#2d3436',  // Dark text color
-        fontFamily: 'System',  // You can replace with your preferred font
+        color: '#2d3436',  
+        fontFamily: 'System',  
     },
     button: {
-        backgroundColor: '#6c5ce7',  // Purple color
+        backgroundColor: '#6c5ce7',  
         padding: 15,
         borderRadius: 12,
         width: '100%',
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         letterSpacing: 0.5,
-        fontFamily: 'System',  // You can replace with your preferred font
+        fontFamily: 'System',  
     },
     errorToast: {
         position: 'absolute',

@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3000';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_URL = 'http://10.0.2.2:3000';
 
 const getUsers = async () => {
     try {
@@ -15,6 +17,7 @@ export const login = async (secretKey: string) => {
     const users = await getUsers();
     const warehouseman = users.warehousemans.find((warehouseman: any) => warehouseman.secretKey === secretKey);
     if (warehouseman) {
+        await AsyncStorage.setItem('warehouseman', JSON.stringify(warehouseman));
         return { success: true, message: 'Login successful', warehouseman };
     }
     return { success: false, message: 'Invalid secret key' };
