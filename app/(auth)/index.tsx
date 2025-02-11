@@ -44,7 +44,7 @@ export default function Index() {
     }
     return (
         <ThemedView style={styles.container}>
-            <ThemedText type="title" style={styles.title}>Login</ThemedText>
+            <ThemedText type="title" style={styles.title  }>Login</ThemedText>
             
             <TextInput
                 placeholder="Enter your secret key"
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 30,
-        backgroundColor: '#f8f9fa',  
+        backgroundColor: '#f8f9fa',
     },
     title: {
         fontSize: 36,
@@ -93,7 +93,8 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         color: '#2d3436',  
         letterSpacing: 1,
-        fontFamily: 'System',  
+        fontFamily: 'System', 
+        paddingTop: 5,
     },
     input: {
         height: 50,

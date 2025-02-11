@@ -15,6 +15,12 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'person.circle.fill': 'account-circle',
   'person.badge.plus.fill': 'person-add',
+  'camera.fill': 'camera',
+  'qrcode.viewfinder': 'qr-code-scanner',
+  'chart.line.uptrend.xyaxis': 'trending-up',
+  'chart.bar.fill': 'bar-chart',
+  'barcode.viewfinder': 'view-array',
+
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],
