@@ -119,7 +119,7 @@ export default function ExploreScreen() {
           {filteredProducts.map((product: any, index: number) => (
             <TouchableOpacity 
               key={index} 
-              style={[styles.productBox , {borderWidth: 2,  borderColor: product.quantity > 0 ? '#f8f9fa' : 'red'}]}
+              style={[styles.productBox , {borderWidth: 2,  borderColor: product.quantity > 0 ? product.quantity > 10 ? '#f8f9fa' : '#fdc500' : 'red'}]}
               onPress={() => openModal(product)}
             >
               <Image 
@@ -165,11 +165,11 @@ export default function ExploreScreen() {
                 <View style={styles.stockIndicatorContainer}>
                   <View style={[
                     styles.stockIndicator,
-                    { backgroundColor: (selectedProduct as { quantity: number }).quantity > 0 ? 'green' : 'red' }
+                    { backgroundColor: (selectedProduct as { quantity: number }).quantity > 0 ? (selectedProduct as { quantity: number }).quantity > 10 ? 'green' : '#fdc500' : 'red' }
                   ]} />
-                  
+
                   <ThemedText style={styles.stockIndicatorText}>
-                    {(selectedProduct as { quantity: number }).quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                    {(selectedProduct as { quantity: number }).quantity > 0 ? (selectedProduct as { quantity: number }).quantity > 10 ? 'In Stock' : 'Low Stock' : 'Out of Stock'}
                   </ThemedText>
                 </View>
                 <TouchableOpacity 
