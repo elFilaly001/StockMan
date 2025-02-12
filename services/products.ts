@@ -70,7 +70,7 @@ const updateStock = async (product: any, stock: any) => {
     const warehouseId = warehouseman.warehouseId;
 
     const stock_id = foundProduct.product.stock.find((stock: any) => stock.id === warehouseId);
-    
+
     if (stock_id === undefined) {
         foundProduct.product.stock.push({ id: warehouseId, quantity: stock.quantity });
     } else {
@@ -81,4 +81,4 @@ const updateStock = async (product: any, stock: any) => {
 }
 
 
-export { checkProduct, addProduct, updateProduct, deleteProduct, updateStock };
+export { getProducts, checkProduct, addProduct, updateProduct, deleteProduct, updateStock };

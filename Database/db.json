@@ -104,20 +104,16 @@
       }
     },
     {
-      "id": "781330",
-      "name": "fitr 7mar",
-      "type": "school",
+      "id": "167039",
+      "name": "fitr 7mar ",
+      "type": "stilo",
       "price": "10",
-      "supplier": "expressjs",
+      "supplier": "express js",
       "barcode": "6111249078386",
       "stock": [
         {
-          "id": 1999,
-          "quantity": 22
-        },
-        {
           "id": 2991,
-          "quantity": 45
+          "quantity": 30
         }
       ]
     }
