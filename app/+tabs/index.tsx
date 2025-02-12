@@ -168,7 +168,10 @@ export default function BarcodeScanner() {
 
             {!isNewProduct && (
               <>
-                <Text style={styles.productName}>{currentProduct?.name} - {currentProduct?.supplier}</Text>
+                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Name: </Text> {currentProduct?.name} </Text>
+                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Type: </Text> {currentProduct?.type} </Text>
+                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Supplier: </Text> {currentProduct?.supplier} </Text>
+                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Price: </Text> {currentProduct?.price} </Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter quantity"
@@ -332,7 +335,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 18,
-    marginBottom: 15,
+    marginBottom: 10,
     color: '#666',
   },
   inputContainer: {

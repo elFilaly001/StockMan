@@ -15,7 +15,7 @@ const getUsers = async () => {
 
 export const login = async (secretKey: string) => {
     const users = await getUsers();
-    const warehouseman = users.warehousemans.find((warehouseman: any) => warehouseman.secretKey === secretKey);
+    const warehouseman = users.warehousemans.find((warehouseman: any) => warehouseman.secretKey === secretKey.trim());
     if (warehouseman) {
         await AsyncStorage.setItem('warehouseman', JSON.stringify(warehouseman));
         // console.log("warehouseman", warehouseman);
