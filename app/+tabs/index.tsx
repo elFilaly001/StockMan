@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Modal, TextInput } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Modal, TextInput, Alert } from 'react-native';
 import { checkProduct, addProduct, updateStock } from '../../services/products';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,30 +11,31 @@ interface NewProduct {
   barcode: string;
   price: string;
   supplier: string;
-  stock: {
+  stock:[{
     id: string,
     quantity: number
-  }
+  }]
 }
 
 export default function BarcodeScanner() {
-  const [facing, setFacing] = useState<CameraType>('back');
+
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isTransferProduct, setIsTransferProduct] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<any>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [newProduct, setNewProduct] = useState<NewProduct>({
-    id: '' ,
+    id: '',
     name: '',
     type: '',
     price: '',
     supplier: '',
     barcode: '',
-    stock: {
+    stock: [{
       id: '',
       quantity: 0
-    }
+    }]
   });
 
   if (!permission) {
@@ -50,20 +51,17 @@ export default function BarcodeScanner() {
     );
   }
 
-  function toggleCameraFacing() {
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
-  }
-
   const handleBarCodeScanned = async ({ type, data }: BarcodeScanningResult) => {
+
     setScanned(true);
     setCurrentProduct({ barcode: data });
     const warehouseman = (await AsyncStorage.getItem('warehouseman')) || '';
     const warehouseman_id = JSON.parse(warehouseman).warehouseId;
-    const product = await checkProduct(data, warehouseman_id);
+    const product = await checkProduct(data);
     if (product.status) {
-      setCurrentProduct(product.product);
-      setIsNewProduct(false);
-      setModalVisible(true);
+        setCurrentProduct(product.product);
+        setIsNewProduct(false);
+        setModalVisible(true);
     } else {
       setCurrentProduct({ barcode: data });
       setIsNewProduct(true);
@@ -72,23 +70,55 @@ export default function BarcodeScanner() {
   };
 
   const handleSubmit = async () => {
+    try {
+      const warehouseman = (await AsyncStorage.getItem('warehouseman')) || '';
+      const warehouseman_id = JSON.parse(warehouseman).warehouseId;
 
-    const warehouseman = (await AsyncStorage.getItem('warehouseman')) || '';
-    const warehouseman_id = JSON.parse(warehouseman).warehouseId;
-    const ProductId = Math.floor(Math.random() * 10000).toString();
+      const PRD_ID = Math.floor(Math.random() * 1000000).toString();
 
-    if (isNewProduct) {
-      console.log(`New product added: 
-        id: ${ProductId}
-        Name: ${newProduct.name}
-        Type: ${newProduct.type}
-        Price: ${newProduct.price}
-        Supplier: ${newProduct.supplier}
-        Barcode: ${currentProduct.barcode}
-        Stock: ${newProduct.stock.quantity}
-      `);
-      await addProduct({...newProduct , id: ProductId , barcode: currentProduct.barcode , stock: {id: warehouseman_id, quantity: newProduct.stock.quantity}})
+      if (isNewProduct) {
+        console.log(`New product added: 
+          id: ${newProduct.id}
+          Name: ${newProduct.name}
+          Type: ${newProduct.type}
+          Price: ${newProduct.price}
+          Supplier: ${newProduct.supplier}
+          Barcode: ${currentProduct.barcode}
+          Stock: ${newProduct.stock[0].quantity}
+        `);
+        await addProduct({ ...newProduct, id: PRD_ID, barcode: currentProduct.barcode, stock: [{ id: warehouseman_id, quantity: newProduct.stock[0].quantity }] })
+        setModalVisible(false);
+        setNewProduct({
+          id: '',
+          name: '',
+          type: '',
+          price: '',
+          supplier: '',
+          barcode: '',
+          stock: [{
+            id: '',
+            quantity: 0
+          }]
+        });
+      } else if (isTransferProduct) {
+        // Add new stock for current warehouse
+        const result = await updateStock(currentProduct, {
+          id: warehouseman_id,
+          quantity: newProduct.stock[0].quantity
+        });
+        
+        if (result.status) {
+          Alert.alert('Success', 'Stock added successfully');
+        } else {
+          Alert.alert('Error', 'Failed to add stock');
+        }
+      } else {
+        console.log(`Added ${newProduct.stock[0].quantity} of ${currentProduct.name} - ${currentProduct.supplier} , id: ${currentProduct.id}`);
+        await updateStock(currentProduct, newProduct.stock[0])
+      }
+      
       setModalVisible(false);
+      setScanned(false);
       setNewProduct({
         id: '',
         name: '',
@@ -96,32 +126,28 @@ export default function BarcodeScanner() {
         price: '',
         supplier: '',
         barcode: '',
-        stock: {
+        stock: [{
           id: '',
           quantity: 0
-        }
+        }]
       });
-    } else {
-      console.log(`Added ${newProduct.stock.quantity} of ${currentProduct.name} - ${currentProduct.supplier} , id: ${currentProduct.id}`);
-      await updateStock(currentProduct , newProduct.stock.quantity)
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Something went wrong');
     }
-    setModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
       <CameraView
         style={styles.camera}
-        facing={facing}
+        facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: ['ean13', 'upc_a'],
         }}
       >
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-            <Text style={styles.text}>Flip Camera</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={() => setScanned(false)}>
             <Text style={styles.text}>Scan Again</Text>
           </TouchableOpacity>
@@ -139,7 +165,7 @@ export default function BarcodeScanner() {
             <Text style={styles.modalTitle}>
               {isNewProduct ? 'Add New Product' : 'Product Found'}
             </Text>
-            
+
             {!isNewProduct && (
               <>
                 <Text style={styles.productName}>{currentProduct?.name} - {currentProduct?.supplier}</Text>
@@ -147,10 +173,10 @@ export default function BarcodeScanner() {
                   style={styles.input}
                   placeholder="Enter quantity"
                   keyboardType="numeric"
-                  value={newProduct.stock.quantity.toString()}
+                  value={newProduct.stock[0].quantity.toString()}
                   onChangeText={(value) => setNewProduct({
-                    ...newProduct, 
-                    stock: { ...newProduct.stock, quantity: parseInt(value) || 0 }
+                    ...newProduct,
+                    stock: [{ ...newProduct.stock[0], quantity: parseInt(value) || 0 }]
                   })}
                 />
               </>
@@ -162,35 +188,35 @@ export default function BarcodeScanner() {
                   style={styles.input}
                   placeholder="Product Name"
                   value={newProduct.name}
-                  onChangeText={(value) => setNewProduct({...newProduct, name: value})}
+                  onChangeText={(value) => setNewProduct({ ...newProduct, name: value })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Product Type"
                   value={newProduct.type}
-                  onChangeText={(value) => setNewProduct({...newProduct, type: value})}
+                  onChangeText={(value) => setNewProduct({ ...newProduct, type: value })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Price"
                   keyboardType="decimal-pad"
                   value={newProduct.price}
-                  onChangeText={(value) => setNewProduct({...newProduct, price: value})}
+                  onChangeText={(value) => setNewProduct({ ...newProduct, price: value })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Supplier"
                   value={newProduct.supplier}
-                  onChangeText={(value) => setNewProduct({...newProduct, supplier: value})}
+                  onChangeText={(value) => setNewProduct({ ...newProduct, supplier: value })}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="Quantity"
                   keyboardType="numeric"
-                  value={newProduct.stock.quantity.toString()}
+                  value={newProduct.stock[0].quantity.toString()}
                   onChangeText={(value) => setNewProduct({
-                    ...newProduct, 
-                    stock: { ...newProduct.stock, quantity: parseInt(value) || 0 }
+                    ...newProduct,
+                    stock: [{ ...newProduct.stock[0], quantity: parseInt(value) || 0 }]
                   })}
                 />
               </View>
@@ -208,10 +234,10 @@ export default function BarcodeScanner() {
                     price: '',
                     supplier: '',
                     barcode: '',
-                    stock: {
+                    stock: [{
                       id: '',
                       quantity: 0
-                    }
+                    }]
                   });
                 }}
               >
@@ -255,7 +281,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   button: {
-    backgroundColor: '#6c5ce7',  
+    backgroundColor: '#6c5ce7',
     padding: 15,
     borderRadius: 12,
     width: '48%',
@@ -264,13 +290,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: '#6c5ce7',
     shadowOffset: {
-        width: 0,
-        height: 2,
+      width: 0,
+      height: 2,
     },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-},
+  },
   text: {
     fontSize: 18,
     fontWeight: 'bold',

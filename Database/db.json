@@ -92,16 +92,34 @@
       ]
     },
     {
-      "id": "3987",
+      "id": "8700",
       "name": "9ar3a dl ma",
       "type": "boissons ",
       "price": "3",
       "supplier": "3ayn atlass",
       "barcode": "6111035001673",
       "stock": {
-        "id": 2991,
-        "quantity": 12
+        "id": 1999,
+        "quantity": 30
       }
+    },
+    {
+      "id": "781330",
+      "name": "fitr 7mar",
+      "type": "school",
+      "price": "10",
+      "supplier": "expressjs",
+      "barcode": "6111249078386",
+      "stock": [
+        {
+          "id": 1999,
+          "quantity": 22
+        },
+        {
+          "id": 2991,
+          "quantity": 42
+        }
+      ]
     }
   ],
   "warehousemans": [
