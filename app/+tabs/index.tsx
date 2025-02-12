@@ -37,6 +37,8 @@ export default function BarcodeScanner() {
       quantity: 0
     }]
   });
+  const [manualBarcode, setManualBarcode] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
 
   if (!permission) {
     return <View />;
@@ -67,6 +69,21 @@ export default function BarcodeScanner() {
       setIsNewProduct(true);
       setModalVisible(true);
     }
+  };
+
+  const handleManualSubmit = async () => {
+    const product = await checkProduct(manualBarcode);
+    if (product.status) {
+      setCurrentProduct(product.product);
+      setIsNewProduct(false);
+      setModalVisible(true);
+    } else {
+      setCurrentProduct(product.product);
+      setIsNewProduct(true);
+      setModalVisible(true);
+    }
+    setManualBarcode(''); 
+    setShowManualInput(false);
   };
 
   const handleSubmit = async () => {
@@ -151,8 +168,34 @@ export default function BarcodeScanner() {
           <TouchableOpacity style={styles.button} onPress={() => setScanned(false)}>
             <Text style={styles.text}>Scan Again</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+        style={styles.button}
+        onPress={() => setShowManualInput(!showManualInput)}
+      >
+        <Text style={styles.text}>Enter Barcode </Text>
+      </TouchableOpacity>
+
         </View>
       </CameraView>
+
+     
+      {showManualInput && (
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter barcode"
+            value={manualBarcode}
+            keyboardType="numeric"
+            onChangeText={setManualBarcode}
+          />
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleManualSubmit}
+          >
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Modal
         animationType="slide"
@@ -339,18 +382,29 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   inputContainer: {
+    marginTop: 20,
     width: '100%',
-    gap: 10,
   },
   input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    height: 50,
+    borderColor: '#b2bec3',
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 15,
     marginBottom: 10,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
+  },
+  submitButton: {
+    backgroundColor: '#6c5ce7',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
   modalButtons: {
     flexDirection: 'row',

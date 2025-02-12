@@ -69,7 +69,7 @@ const updateStock = async (product: any, stock: any) => {
     const warehouseman = JSON.parse(await AsyncStorage.getItem('warehouseman') || '');
     const warehouseId = warehouseman.warehouseId;
     const stock_id = foundProduct.product.stock.find((stock: any) => stock.id === warehouseId);
-    
+
     if (stock_id === undefined) {
         foundProduct.product.stock.push({ id: warehouseId, quantity: stock.quantity });
     } else {

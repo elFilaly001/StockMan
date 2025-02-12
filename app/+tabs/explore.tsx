@@ -119,7 +119,7 @@ export default function ExploreScreen() {
           {filteredProducts.map((product: any, index: number) => (
             <TouchableOpacity 
               key={index} 
-              style={styles.productBox}
+              style={[styles.productBox , {borderWidth: 2,  borderColor: product.quantity > 0 ? '#f8f9fa' : 'red'}]}
               onPress={() => openModal(product)}
             >
               <Image 
@@ -159,11 +159,15 @@ export default function ExploreScreen() {
                 />
                 <ThemedText style={styles.modalTitle}>{(selectedProduct as { name: string }).name}</ThemedText>
                 <ThemedText style={styles.modalPrice}>Price: {(selectedProduct as { price: number }).price} DH</ThemedText>
+                <ThemedText style={styles.modalPrice}>Type: {(selectedProduct as { type: string }).type}</ThemedText>
+                <ThemedText style={styles.modalPrice}>Barcode: {(selectedProduct as { barcode: string }).barcode}</ThemedText>
+                <ThemedText style={styles.modalPrice}>Supplier: {(selectedProduct as { supplier: string }).supplier}</ThemedText>
                 <View style={styles.stockIndicatorContainer}>
                   <View style={[
                     styles.stockIndicator,
                     { backgroundColor: (selectedProduct as { quantity: number }).quantity > 0 ? 'green' : 'red' }
                   ]} />
+                  
                   <ThemedText style={styles.stockIndicatorText}>
                     {(selectedProduct as { quantity: number }).quantity > 0 ? 'In Stock' : 'Out of Stock'}
                   </ThemedText>
