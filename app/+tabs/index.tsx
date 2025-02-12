@@ -56,7 +56,7 @@ export default function BarcodeScanner() {
     setScanned(true);
     setCurrentProduct({ barcode: data });
     const warehouseman = (await AsyncStorage.getItem('warehouseman')) || '';
-    const warehouseman_id = JSON.parse(warehouseman).warehouseId;
+    // const warehouseman_id = JSON.parse(warehouseman).warehouseId;
     const product = await checkProduct(data);
     if (product.status) {
         setCurrentProduct(product.product);
@@ -101,7 +101,7 @@ export default function BarcodeScanner() {
           }]
         });
       } else if (isTransferProduct) {
-        // Add new stock for current warehouse
+        const warehouseman_id = JSON.parse(warehouseman).warehouseId;
         const result = await updateStock(currentProduct, {
           id: warehouseman_id,
           quantity: newProduct.stock[0].quantity
