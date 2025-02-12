@@ -1,10 +1,9 @@
 // This file is a fallback for using MaterialIcons on Android and web.
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { SymbolWeight } from 'expo-symbols';
 import React from 'react';
 import { OpaqueColorValue, StyleProp, TextStyle, ViewStyle } from 'react-native';
-
 // Add your SFSymbol to MaterialIcons mappings here.
 const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
@@ -15,12 +14,18 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'person.circle.fill': 'account-circle',
   'person.badge.plus.fill': 'person-add',
-} as Partial<
-  Record<
-    import('expo-symbols').SymbolViewProps['name'],
-    React.ComponentProps<typeof MaterialIcons>['name']
-  >
->;
+  'camera.fill': 'camera',
+  'qrcode.viewfinder': 'qr-code-scanner',
+  'chart.line.uptrend.xyaxis': 'trending-up',
+  'chart.bar.fill': 'bar-chart',
+  'barcode.viewfinder': 'view-array',
+  'box.fill': 'inventory',
+} as const;
+
+// Separate mapping for FontAwesome icons
+const FA_MAPPING = {
+  'barcode': 'barcode'
+} as const;
 
 export type IconSymbolName = keyof typeof MAPPING;
 
