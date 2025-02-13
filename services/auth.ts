@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://172.16.10.240:3000';
+const API_URL = 'http://192.168.137.1:3000';
 
 const getUsers = async () => {
     try {

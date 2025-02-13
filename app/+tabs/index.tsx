@@ -1,8 +1,9 @@
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
-import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Modal, TextInput, Alert } from 'react-native';
-import { checkProduct, addProduct, updateStock } from '../../services/products';
+import { useEffect, useRef, useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Modal, TextInput, Alert, Switch, Animated } from 'react-native';
+import { checkProduct, addProduct, updateStocks } from '../../services/products';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ThemedText } from '@/components/ThemedText';
 
 interface NewProduct {
   id: string;
@@ -11,7 +12,7 @@ interface NewProduct {
   barcode: string;
   price: string;
   supplier: string;
-  stock:[{
+  stocks: [{
     id: string,
     quantity: number
   }]
@@ -22,9 +23,10 @@ export default function BarcodeScanner() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [isTransferProduct, setIsTransferProduct] = useState(false);
+  const [warehouseman, setWarehouseman] = useState(null);
   const [currentProduct, setCurrentProduct] = useState<any>(null);
   const [isNewProduct, setIsNewProduct] = useState(false);
+  const [isNegative, setIsNegative] = useState(false);
   const [newProduct, setNewProduct] = useState<NewProduct>({
     id: '',
     name: '',
@@ -32,17 +34,18 @@ export default function BarcodeScanner() {
     price: '',
     supplier: '',
     barcode: '',
-    stock: [{
+    stocks: [{
       id: '',
       quantity: 0
     }]
   });
   const [manualBarcode, setManualBarcode] = useState('');
-  const [showManualInput, setShowManualInput] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);  
 
   if (!permission) {
     return <View />;
   }
+
 
   if (!permission.granted) {
     return (
@@ -52,25 +55,46 @@ export default function BarcodeScanner() {
       </View>
     );
   }
+  const handleQuantityChange = async (value: string) => {
+    
+    const warehousemanStr = await AsyncStorage.getItem('warehouseman');
+    const warehouseman = warehousemanStr ? JSON.parse(warehousemanStr) : null;
+    const warehouse_id = warehouseman ? warehouseman.warehouseId : null;
+    
+    
+  
+    const parsedValue = parseInt(value, 10);
+    const quantity = isNaN(parsedValue) ? 0 : parsedValue;
+    const newQuantity = isNegative ? -Math.abs(quantity) : quantity;
+  
+      setNewProduct((prevProduct) => ({
+        ...prevProduct,
+        stocks: [{ ...prevProduct.stocks[0], quantity: newQuantity }],
+      }));
+    
+  };
+  
 
   const handleBarCodeScanned = async ({ type, data }: BarcodeScanningResult) => {
 
     setScanned(true);
     setCurrentProduct({ barcode: data });
     const warehouseman = (await AsyncStorage.getItem('warehouseman')) || '';
-    const warehouseman_id = JSON.parse(warehouseman).warehouseId;
+    // const warehouseman_id = JSON.parse(warehouseman).warehouseId;
     const product = await checkProduct(data);
     if (product.status) {
-        setCurrentProduct(product.product);
-        setIsNewProduct(false);
-        setModalVisible(true);
+      const warehousemanObj = warehouseman ? JSON.parse(warehouseman) : null;
+      const warehouseId = warehousemanObj && typeof warehousemanObj === 'object' ? warehousemanObj.warehouseId : null;
+      setCurrentProduct(product.product);
+      setIsNewProduct(false);
+      setModalVisible(true);
     } else {
       setCurrentProduct({ barcode: data });
       setIsNewProduct(true);
       setModalVisible(true);
     }
   };
-
+  
   const handleManualSubmit = async () => {
     const product = await checkProduct(manualBarcode);
     if (product.status) {
@@ -78,62 +102,48 @@ export default function BarcodeScanner() {
       setIsNewProduct(false);
       setModalVisible(true);
     } else {
+
       setCurrentProduct(product.product);
       setIsNewProduct(true);
       setModalVisible(true);
     }
-    setManualBarcode(''); 
+    setManualBarcode('');
     setShowManualInput(false);
   };
 
   const handleSubmit = async () => {
     try {
-      const warehouseman = (await AsyncStorage.getItem('warehouseman')) || '';
-      const warehouseman_id = JSON.parse(warehouseman).warehouseId;
-
-      const PRD_ID = Math.floor(Math.random() * 1000000).toString();
-
+      const warehousemanStr = await AsyncStorage.getItem('warehouseman');
+      const warehouseman = warehousemanStr ? JSON.parse(warehousemanStr) : null;
+      const warehouseman_id = warehouseman ? warehouseman.warehouseId : null;
+  
+      const PRD_ID = Math.floor(Math.random() * 1000000).toString()
       if (isNewProduct) {
-        console.log(`New product added: 
-          id: ${newProduct.id}
-          Name: ${newProduct.name}
-          Type: ${newProduct.type}
-          Price: ${newProduct.price}
-          Supplier: ${newProduct.supplier}
-          Barcode: ${currentProduct.barcode}
-          Stock: ${newProduct.stock[0].quantity}
-        `);
-        await addProduct({ ...newProduct, id: PRD_ID, barcode: currentProduct.barcode, stock: [{ id: warehouseman_id, quantity: newProduct.stock[0].quantity }] })
-        setModalVisible(false);
-        setNewProduct({
-          id: '',
-          name: '',
-          type: '',
-          price: '',
-          supplier: '',
-          barcode: '',
-          stock: [{
-            id: '',
-            quantity: 0
-          }]
+        await addProduct({
+          ...newProduct,
+          id: PRD_ID,
+          barcode: currentProduct.barcode,
+          stocks: [{ id: warehouseman_id, quantity: newProduct.stocks[0].quantity }],
         });
-      } else if (isTransferProduct) {
-        // Add new stock for current warehouse
-        const result = await updateStock(currentProduct, {
-          id: warehouseman_id,
-          quantity: newProduct.stock[0].quantity
-        });
-        
-        if (result.status) {
-          Alert.alert('Success', 'Stock added successfully');
-        } else {
-          Alert.alert('Error', 'Failed to add stock');
-        }
       } else {
-        console.log(`Added ${newProduct.stock[0].quantity} of ${currentProduct.name} - ${currentProduct.supplier} , id: ${currentProduct.id}`);
-        await updateStock(currentProduct, newProduct.stock[0])
+        if (isNegative && currentProduct.stocks[0].quantity < Math.abs(newProduct.stocks[0].quantity)) {
+          Alert.alert('Error', 'You can\'t remove more than the available stock');
+        } else {
+
+          const result = await updateStocks(currentProduct, {
+            id: warehouseman_id,
+            quantity: newProduct.stocks[0].quantity,
+          });
+          
+          if (result.status) {
+            Alert.alert('Success', 'Stock updated successfully');
+          } else {
+            Alert.alert('Error', 'Failed to update stock');
+          }
+        }
       }
-      
+  
+      // Reset state after submission
       setModalVisible(false);
       setScanned(false);
       setNewProduct({
@@ -143,16 +153,15 @@ export default function BarcodeScanner() {
         price: '',
         supplier: '',
         barcode: '',
-        stock: [{
-          id: '',
-          quantity: 0
-        }]
+        stocks: [{ id: '', quantity: 0 }],
       });
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Something went wrong');
     }
   };
+
+
 
   return (
     <View style={styles.container}>
@@ -169,16 +178,16 @@ export default function BarcodeScanner() {
             <Text style={styles.text}>Scan Again</Text>
           </TouchableOpacity>
           <TouchableOpacity
-        style={styles.button}
-        onPress={() => setShowManualInput(!showManualInput)}
-      >
-        <Text style={styles.text}>Enter Barcode </Text>
-      </TouchableOpacity>
+            style={styles.button}
+            onPress={() => setShowManualInput(!showManualInput)}
+          >
+            <Text style={styles.text}>Enter Barcode </Text>
+          </TouchableOpacity>
 
         </View>
       </CameraView>
 
-     
+
       {showManualInput && (
         <View style={styles.inputContainer}>
           <TextInput
@@ -211,19 +220,38 @@ export default function BarcodeScanner() {
 
             {!isNewProduct && (
               <>
-                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Name: </Text> {currentProduct?.name} </Text>
-                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Type: </Text> {currentProduct?.type} </Text>
-                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Supplier: </Text> {currentProduct?.supplier} </Text>
-                <Text style={styles.productName}><Text style={{ fontWeight: 'bold' }}>Price: </Text> {currentProduct?.price} </Text>
+                <Text style={styles.productName}>
+                  <Text style={{ fontWeight: 'bold' }}>Name: </Text> {currentProduct?.name}
+                </Text>
+                <Text style={styles.productName}>
+                  <Text style={{ fontWeight: 'bold' }}>Type: </Text> {currentProduct?.type}
+                </Text>
+                <Text style={styles.productName}>
+                  <Text style={{ fontWeight: 'bold' }}>Supplier: </Text> {currentProduct?.supplier}
+                </Text>
+                <Text style={styles.productName}>
+                  <Text style={{ fontWeight: 'bold' }}>Price: </Text> {currentProduct?.price}
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleButton,
+                    isNegative ? styles.toggleButtonActive : styles.toggleButtonInactive
+                  ]}
+                  onPress={() => setIsNegative(!isNegative)}
+                >
+                  <Text style={[
+                    styles.toggleText,
+                    isNegative ? styles.toggleTextActive : styles.toggleTextInactive
+                  ]}>
+                    {isNegative ? 'Remove from Stock' : 'Add to Stock'}
+                  </Text>
+                </TouchableOpacity>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter quantity"
                   keyboardType="numeric"
-                  value={newProduct.stock[0].quantity.toString()}
-                  onChangeText={(value) => setNewProduct({
-                    ...newProduct,
-                    stock: [{ ...newProduct.stock[0], quantity: parseInt(value) || 0 }]
-                  })}
+                  value={Math.abs(newProduct.stocks[0].quantity).toString()}
+                  onChangeText={handleQuantityChange}
                 />
               </>
             )}
@@ -259,10 +287,10 @@ export default function BarcodeScanner() {
                   style={styles.input}
                   placeholder="Quantity"
                   keyboardType="numeric"
-                  value={newProduct.stock[0].quantity.toString()}
+                  value={newProduct.stocks[0].quantity.toString()}
                   onChangeText={(value) => setNewProduct({
                     ...newProduct,
-                    stock: [{ ...newProduct.stock[0], quantity: parseInt(value) || 0 }]
+                    stocks: [{ ...newProduct.stocks[0], quantity: parseInt(value) || 0 }]
                   })}
                 />
               </View>
@@ -280,7 +308,7 @@ export default function BarcodeScanner() {
                     price: '',
                     supplier: '',
                     barcode: '',
-                    stock: [{
+                    stocks: [{
                       id: '',
                       quantity: 0
                     }]
@@ -294,7 +322,7 @@ export default function BarcodeScanner() {
                 onPress={handleSubmit}
               >
                 <Text style={styles.modalButtonText}>
-                  {isNewProduct ? 'Save' : 'Add'}
+                  Save
                 </Text>
               </TouchableOpacity>
             </View>
@@ -316,6 +344,33 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+  },
+  toggleButton: {
+    padding: 12,
+    borderRadius: 12,
+    marginVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    width: '100%',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#6c5ce7',
+    borderColor: '#6c5ce7',
+  },
+  toggleButtonInactive: {
+    backgroundColor: 'white',
+    borderColor: '#6c5ce7',
+  },
+  toggleText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  toggleTextActive: {
+    color: 'white',
+  },
+  toggleTextInactive: {
+    color: '#6c5ce7',
   },
   buttonContainer: {
     flex: 1,
@@ -386,6 +441,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
+    width: '100%',
     height: 50,
     borderColor: '#b2bec3',
     borderWidth: 1.5,
@@ -428,5 +484,27 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  errorToast: {
+    position: 'absolute',
+    bottom: 40,
+    backgroundColor: '#ff4757',
+    padding: 16,
+    borderRadius: 12,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  errorText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

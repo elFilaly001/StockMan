@@ -23,7 +23,7 @@
         {
           "id": 2991,
           "name": "Lazari H2",
-          "quantity": 24,
+          "quantity": 20,
           "localisation": {
             "city": "Oujda",
             "latitude": 34.689404,
@@ -50,7 +50,7 @@
         {
           "id": 1999,
           "name": "Gueliz B2",
-          "quantity": 20,
+          "quantity": 0,
           "localisation": {
             "city": "Marrakesh",
             "latitude": 31.628674,
@@ -92,42 +92,12 @@
       ]
     },
     {
-      "id": "8700",
-      "name": "9ar3a dl ma",
-      "type": "boissons ",
-      "price": "3",
-      "supplier": "3ayn atlass",
-      "barcode": "6111035001673",
-      "stock": {
-        "id": 1999,
-        "quantity": 30
-      }
-    },
-    {
       "id": "167039",
       "name": "fitr 7mar ",
       "type": "stilo",
       "price": "10",
       "supplier": "express js",
       "barcode": "6111249078386",
-      "stock": [
-        {
-          "id": 2991,
-          "quantity": 10
-        },
-        {
-          "id": 1999,
-          "quantity": 5
-        }
-      ]
-    },
-    {
-      "id": "362822",
-      "name": "9ar3a dl ma ",
-      "type": "boissons ",
-      "price": "10",
-      "supplier": "3ayn atlass",
-      "barcode": "6111035001673",
       "stocks": [
         {
           "id": 2991,
@@ -135,7 +105,7 @@
         },
         {
           "id": 1999,
-          "quantity": 95
+          "quantity": 12
         }
       ]
     },
@@ -146,6 +116,20 @@
       "price": "1",
       "supplier": "renova",
       "barcode": "5601028002110",
+      "stocks": [
+        {
+          "id": 1999,
+          "quantity": 10
+        }
+      ]
+    },
+    {
+      "id": "727611",
+      "name": "9ar3a dlma",
+      "type": "boisson",
+      "price": "3",
+      "supplier": "3ayn atlass",
+      "barcode": "6111035001673",
       "stocks": [
         {
           "id": 1999,

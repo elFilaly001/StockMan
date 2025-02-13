@@ -65,6 +65,7 @@ export default function StockScreen() {
             }
             return acc;
         }, []);
+        
         setStockRows(rows);
     };
 
