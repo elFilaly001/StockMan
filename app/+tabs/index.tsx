@@ -1,7 +1,7 @@
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Modal, TextInput, Alert } from 'react-native';
-import { checkProduct, addProduct, updateStock } from '../../services/products';
+import { checkProduct, addProduct, updateStocks } from '../../services/products';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface NewProduct {
@@ -11,7 +11,7 @@ interface NewProduct {
   barcode: string;
   price: string;
   supplier: string;
-  stock:[{
+  stocks: [{
     id: string,
     quantity: number
   }]
@@ -32,7 +32,7 @@ export default function BarcodeScanner() {
     price: '',
     supplier: '',
     barcode: '',
-    stock: [{
+    stocks: [{
       id: '',
       quantity: 0
     }]
@@ -101,9 +101,9 @@ export default function BarcodeScanner() {
           Price: ${newProduct.price}
           Supplier: ${newProduct.supplier}
           Barcode: ${currentProduct.barcode}
-          Stock: ${newProduct.stock[0].quantity}
+          Stocks: ${newProduct.stocks[0].quantity}
         `);
-        await addProduct({ ...newProduct, id: PRD_ID, barcode: currentProduct.barcode, stock: [{ id: warehouseman_id, quantity: newProduct.stock[0].quantity }] })
+        await addProduct({ ...newProduct, id: PRD_ID, barcode: currentProduct.barcode, stocks: [{ id: warehouseman_id, quantity: newProduct.stocks[0].quantity }] })
         setModalVisible(false);
         setNewProduct({
           id: '',
@@ -112,16 +112,16 @@ export default function BarcodeScanner() {
           price: '',
           supplier: '',
           barcode: '',
-          stock: [{
+          stocks: [{
             id: '',
             quantity: 0
           }]
         });
       } else if (isTransferProduct) {
         const warehouseman_id = JSON.parse(warehouseman).warehouseId;
-        const result = await updateStock(currentProduct, {
+        const result = await updateStocks(currentProduct, {
           id: warehouseman_id,
-          quantity: newProduct.stock[0].quantity
+          quantity: newProduct.stocks[0].quantity
         });
         
         if (result.status) {
@@ -130,8 +130,8 @@ export default function BarcodeScanner() {
           Alert.alert('Error', 'Failed to add stock');
         }
       } else {
-        console.log(`Added ${newProduct.stock[0].quantity} of ${currentProduct.name} - ${currentProduct.supplier} , id: ${currentProduct.id}`);
-        await updateStock(currentProduct, newProduct.stock[0])
+        console.log(`Added ${newProduct.stocks[0].quantity} of ${currentProduct.name} - ${currentProduct.supplier} , id: ${currentProduct.id}`);
+        await updateStocks(currentProduct, newProduct.stocks[0])
       }
       
       setModalVisible(false);
@@ -143,7 +143,7 @@ export default function BarcodeScanner() {
         price: '',
         supplier: '',
         barcode: '',
-        stock: [{
+        stocks: [{
           id: '',
           quantity: 0
         }]
@@ -219,10 +219,10 @@ export default function BarcodeScanner() {
                   style={styles.input}
                   placeholder="Enter quantity"
                   keyboardType="numeric"
-                  value={newProduct.stock[0].quantity.toString()}
+                  value={newProduct.stocks[0].quantity.toString()}
                   onChangeText={(value) => setNewProduct({
                     ...newProduct,
-                    stock: [{ ...newProduct.stock[0], quantity: parseInt(value) || 0 }]
+                    stocks: [{ ...newProduct.stocks[0], quantity: parseInt(value) || 0 }]
                   })}
                 />
               </>
@@ -259,10 +259,10 @@ export default function BarcodeScanner() {
                   style={styles.input}
                   placeholder="Quantity"
                   keyboardType="numeric"
-                  value={newProduct.stock[0].quantity.toString()}
+                  value={newProduct.stocks[0].quantity.toString()}
                   onChangeText={(value) => setNewProduct({
                     ...newProduct,
-                    stock: [{ ...newProduct.stock[0], quantity: parseInt(value) || 0 }]
+                    stocks: [{ ...newProduct.stocks[0], quantity: parseInt(value) || 0 }]
                   })}
                 />
               </View>
@@ -280,7 +280,7 @@ export default function BarcodeScanner() {
                     price: '',
                     supplier: '',
                     barcode: '',
-                    stock: [{
+                    stocks: [{
                       id: '',
                       quantity: 0
                     }]

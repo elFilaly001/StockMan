@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://172.16.10.240:3000';
+const API_URL = 'http://192.168.137.1:3000';
 
 const getProducts = async () => {
     const response = await fetch(`${API_URL}/products`);
@@ -10,7 +10,10 @@ const getProducts = async () => {
 
 const getProductByBarcode_stock = async (barcode: string, stock_id: string) => {
     const products = await getProducts();
-    const product = products.find((product: any) => product.barcode === barcode && product.stock.id === stock_id);
+    const product = products.find((product: any) => 
+        product.barcode === barcode && 
+        product.stocks.some((stock: any) => stock.id === stock_id)
+    );
     if (product) {
         return { status: true, product };
     }
@@ -32,8 +35,7 @@ const checkProduct = async (barcode: string) => {
         return { status: true, product: product.product };
     }
     return { status: false, product: null };
-}
-
+};
 
 const addProduct = async (product: any) => {
     const response = await fetch(`${API_URL}/products`, {
@@ -44,7 +46,7 @@ const addProduct = async (product: any) => {
         body: JSON.stringify(product),
     });
     return response;
-}
+};
 
 const updateProduct = async (product: any) => {
     const response = await fetch(`${API_URL}/products/${product.id}`, {
@@ -55,29 +57,28 @@ const updateProduct = async (product: any) => {
         body: JSON.stringify(product),
     });
     return response;
-}
+};
 
 const deleteProduct = async (product: any) => {
     const response = await fetch(`${API_URL}/products/${product.id}`, {
         method: 'DELETE',
     });
     return response;
-}
+};
 
-const updateStock = async (product: any, stock: any) => {
+const updateStocks = async (product: any, stocks: any) => {
     const foundProduct = await getProductByBarcode(product.barcode);
-    const warehouseman = JSON.parse(await AsyncStorage.getItem('warehouseman') || '');
+    const warehouseman = JSON.parse(await AsyncStorage.getItem('warehouseman') || '{}');
     const warehouseId = warehouseman.warehouseId;
-    const stock_id = foundProduct.product.stock.find((stock: any) => stock.id === warehouseId);
+    const stockEntry = foundProduct.product.stocks.find((stock: any) => stock.id === warehouseId);
 
-    if (stock_id === undefined) {
-        foundProduct.product.stock.push({ id: warehouseId, quantity: stock.quantity });
+    if (stockEntry === undefined) {
+        foundProduct.product.stocks.push({ id: warehouseId, quantity: stocks.quantity });
     } else {
-        stock_id.quantity += stock.quantity;
+        stockEntry.quantity += stocks.quantity;
     }
     await updateProduct(foundProduct.product);
     return { status: true, product: foundProduct.product };
-}
+};
 
-
-export { getProducts, checkProduct, addProduct, updateProduct, deleteProduct, updateStock };
+export { getProducts, checkProduct, addProduct, updateProduct, deleteProduct, updateStocks };

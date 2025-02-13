@@ -24,16 +24,12 @@ export default function ExploreScreen() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const fetchWarehousemanAndProducts = async () => {
-    // Get the warehouseman info from AsyncStorage
     const warehousemanStr = await AsyncStorage.getItem('warehouseman');
     if (warehousemanStr) {
       const currentWarehouseman = JSON.parse(warehousemanStr);
       setWarehouseman(currentWarehouseman);
 
-      // Now fetch products
       const productsData = await getProducts();
-
-      // Filter products based on the warehouseId
       const warehouseFiltered = productsData
         .map((product: { stocks?: any[]; stock?: any; [key: string]: any }) => {
           let stockEntry = null;

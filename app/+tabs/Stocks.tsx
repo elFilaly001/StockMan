@@ -47,24 +47,25 @@ export default function StockScreen() {
     const fetchStockData = async () => {
         const productsData = await getProducts();
         const rows: StockRow[] = productsData.reduce((acc: StockRow[], product: Product) => {
-            let stocksArray: Stock[] = [];
-            if (product.stocks && Array.isArray(product.stocks)) {
-                stocksArray = product.stocks;
-            } else if (Array.isArray(product.stocks)) {
-                stocksArray = product.stocks;
-            } else {
-                stocksArray = [product.stocks];
-            }
-            stocksArray.forEach(stock => {
-                acc.push({
-                    productName: product.name,
-                    price: product.price,
-                    location: stock.name || '',
-                    quantity: stock.quantity,
+            if (Array.isArray(product.stocks)) {
+                product.stocks.forEach(stock => {
+                    if (stock && typeof stock.quantity === 'number') {
+                        acc.push({
+                            productName: product.name,
+                            price: product.price,
+                            location: stock.name || '',
+                            quantity: stock.quantity,
+                        });
+                    } else {
+                        console.warn('Invalid stock entry:', stock);
+                    }
                 });
-            });
+            } else {
+                console.warn('Invalid or missing stocks for product:', product);
+            }
             return acc;
         }, []);
+        
         setStockRows(rows);
     };
 
