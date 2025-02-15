@@ -7,18 +7,22 @@ const getProducts = async () => {
     const products = await response.json();
     return products;
 };
-
-const getProductByBarcode_stock = async (barcode: string, stock_id: string) => {
+const getProductByStock = async (stock_id: string) => {
+    // Fetch all products
     const products = await getProducts();
-    const product = products.find((product: any) => 
-        product.barcode === barcode && 
-        product.stocks.some((stock: any) => stock.id === stock_id)
+  
+    // Filter products that have the specified stock_id in their stocks array
+    const filteredProducts = products.filter((product: any) =>
+      product.stocks.some((stock: any) => stock.id === stock_id)
     );
-    if (product) {
-        return { status: true, product };
+
+    if (filteredProducts.length > 0) {
+      return { status: true, products: filteredProducts };
+    } else {
+      return { status: false, products: [] };
     }
-    return { status: false, product: null };
-};
+  };
+  
 
 const getProductByBarcode = async (barcode: string) => {
     const products = await getProducts();
@@ -81,4 +85,4 @@ const updateStocks = async (product: any, stocks: any) => {
     return { status: true, product: foundProduct.product };
 };
 
-export { getProducts, checkProduct, addProduct, updateProduct, deleteProduct, updateStocks };
+export { getProducts, checkProduct, addProduct, updateProduct, deleteProduct, updateStocks , getProductByStock};

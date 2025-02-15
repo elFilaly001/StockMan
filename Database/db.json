@@ -159,7 +159,7 @@
   "statistics": {
     "totalProducts": 3,
     "outOfStock": 1,
-    "totalStockValue": 70,
+    "totalStockValue": 0,
     "mostAddedProducts": [],
     "mostRemovedProducts": []
   }

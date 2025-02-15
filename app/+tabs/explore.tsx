@@ -1,46 +1,72 @@
-import { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  Image, 
-  View, 
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  View,
   RefreshControl,
-  Modal
+  Modal,
+  GestureResponderEvent,
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { getProducts } from '@/services/products';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ExploreScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [warehouseProducts, setWarehouseProducts] = useState([]); // products filtered by warehouse
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [warehouseman, setWarehouseman] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+interface Product {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
+  type: string;
+  barcode: string;
+  supplier: string;
+  stocks?: Stock[];
+  stock?: Stock | Stock[];
+}
+
+interface Stock {
+  id: string;
+  quantity: number;
+}
+
+interface Warehouseman {
+  warehouseId: string;
+}
+
+export default function Explore() {
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [warehouseProducts, setWarehouseProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [warehouseman, setWarehouseman] = useState<Warehouseman | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [sortPriceAsc, setSortPriceAsc] = useState<boolean>(true);
+  const [sortQuantityAsc, setSortQuantityAsc] = useState<boolean>(true);
 
   const fetchWarehousemanAndProducts = async () => {
     const warehousemanStr = await AsyncStorage.getItem('warehouseman');
     if (warehousemanStr) {
-      const currentWarehouseman = JSON.parse(warehousemanStr);
+      const currentWarehouseman: Warehouseman = JSON.parse(warehousemanStr);
       setWarehouseman(currentWarehouseman);
 
-      const productsData = await getProducts();
+      const productsData: Product[] = await getProducts();
       const warehouseFiltered = productsData
-        .map((product: { stocks?: any[]; stock?: any; [key: string]: any }) => {
-          let stockEntry = null;
-          // Check if the product has a "stocks" array
+        .map((product) => {
+          let stockEntry: Stock | null = null;
           if (product.stocks && Array.isArray(product.stocks)) {
-            stockEntry = product.stocks.find((s: { id: string }) => s.id === currentWarehouseman.warehouseId);
-          } 
-          // Or check if the product has a "stock" property
-          else if (product.stock) {
+            stockEntry = product.stocks.find(
+              (s) => s.id === currentWarehouseman.warehouseId
+            ) || null;
+          } else if (product.stock) {
             if (Array.isArray(product.stock)) {
-              stockEntry = product.stock.find((s: { id: string }) => s.id === currentWarehouseman.warehouseId);
+              stockEntry = product.stock.find(
+                (s) => s.id === currentWarehouseman.warehouseId
+              ) || null;
             } else {
               if (product.stock.id === currentWarehouseman.warehouseId) {
                 stockEntry = product.stock;
@@ -52,7 +78,7 @@ export default function ExploreScreen() {
           }
           return null;
         })
-        .filter((product: any) => product !== null);
+        .filter((product): product is Product => product !== null);
 
       setWarehouseProducts(warehouseFiltered);
       setFilteredProducts(warehouseFiltered);
@@ -67,7 +93,7 @@ export default function ExploreScreen() {
     if (searchQuery.trim() === '') {
       setFilteredProducts(warehouseProducts);
     } else {
-      const searchResults = warehouseProducts.filter((product: any) =>
+      const searchResults = warehouseProducts.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredProducts(searchResults);
@@ -80,63 +106,112 @@ export default function ExploreScreen() {
     setRefreshing(false);
   };
 
-  const openModal = (product: any) => {
+  const openModal = (product: Product) => {
     setSelectedProduct(product);
     setModalVisible(true);
   };
 
+  const sortProducts = (criteria: 'price' | 'quantity', ascending: boolean) => {
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+      if (ascending) {
+        return a[criteria] - b[criteria];
+      } else {
+        return b[criteria] - a[criteria];
+      }
+    });
+    setFilteredProducts(sortedProducts);
+  };
+  
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>Products</ThemedText>
+    <ThemedText type="title" style={styles.title}>
+      Products
+    </ThemedText>
 
-      <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Search products..."
-          placeholderTextColor="#999"
-          style={styles.input}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSearch}
-        >
-          <ThemedText style={styles.buttonText}>Search</ThemedText>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.searchContainer}>
+      <TextInput
+        placeholder="Search products..."
+        placeholderTextColor="#999"
+        style={styles.input}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+      <TouchableOpacity style={styles.button} onPress={handleSearch}>
+        <ThemedText style={styles.buttonText}>Search</ThemedText>
+      </TouchableOpacity>
+    </View>
 
-      <ScrollView 
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
+    <View style={styles.sortContainer}>
+      <TouchableOpacity
+        style={styles.sortButton}
+        onPress={() => {
+          setSortPriceAsc(!sortPriceAsc);
+          sortProducts('price', !sortPriceAsc);
+        }}
       >
-        <View style={styles.productsGrid}>
-          {filteredProducts.map((product: any, index: number) => (
-            <TouchableOpacity 
-              key={index} 
-              style={[styles.productBox , {borderWidth: 2,  borderColor: product.quantity > 0 ? product.quantity > 10 ? '#f8f9fa' : '#fdc500' : 'red'}]}
-              onPress={() => openModal(product)}
-            >
-              <Image 
-                source={{ uri: product.image }}
-                style={styles.productImage}
-              />
-              <ThemedText style={styles.productName}>{product.name}</ThemedText>
-              <ThemedText style={styles.productPrice}>
-                <ThemedText style={{ fontWeight: 'bold', color: '#6c5ce7' }}>
-                  Price:
-                </ThemedText> {product.price} DH
-              </ThemedText>
-              <ThemedText style={styles.productStock}>
-                <ThemedText style={{ fontWeight: 'bold', color: '#6c5ce7' }}>
-                  Quantity:
-                </ThemedText> {product.quantity}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+        <ThemedText style={styles.buttonText}>
+          Sort Price {sortPriceAsc ? '▲' : '▼'}
+        </ThemedText>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.sortButton}
+        onPress={() => {
+          setSortQuantityAsc(!sortQuantityAsc);
+          sortProducts('quantity', !sortQuantityAsc);
+        }}
+      >
+        <ThemedText style={styles.buttonText}>
+          Sort Quantity {sortQuantityAsc ? '▲' : '▼'}
+        </ThemedText>
+      </TouchableOpacity>
+    </View>
+
+    <ScrollView
+      style={styles.scrollView}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
+      <View style={styles.productsGrid}>
+        {filteredProducts.map((product) => (
+          <TouchableOpacity
+            key={product.id}
+            style={[
+              styles.productBox,
+              {
+                borderWidth: 2,
+                borderColor:
+                  product.quantity > 0
+                    ? product.quantity > 10
+                      ? '#f8f9fa'
+                      : '#fdc500'
+                    : 'red',
+              },
+            ]}
+            onPress={() => openModal(product)}
+          >
+            <Image
+              source={{ uri: product.image }}
+              style={styles.productImage}
+            />
+            <ThemedText style={styles.productName}>{product.name}</ThemedText>
+            <ThemedText style={styles.productPrice}>
+              <ThemedText style={{ fontWeight: 'bold', color: '#6c5ce7' }}>
+                Price:
+              </ThemedText>{' '}
+              {product.price} DH
+            </ThemedText>
+            <ThemedText style={styles.productStock}>
+              <ThemedText style={{ fontWeight: 'bold', color: '#6c5ce7' }}>
+                Quantity:
+              </ThemedText>{' '}
+              {product.quantity}
+            </ThemedText>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
 
       {/* Modal for product details */}
       <Modal
@@ -341,5 +416,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  sortButton: {
+    backgroundColor: '#6c5ce7',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sortContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    width: '100%',
   },
 });

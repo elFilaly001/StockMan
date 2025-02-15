@@ -1,6 +1,6 @@
 // This file is a fallback for using MaterialIcons on Android and web.
 
-import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome ,Ionicons  } from '@expo/vector-icons';
 import { SymbolWeight } from 'expo-symbols';
 import React from 'react';
 import { OpaqueColorValue, StyleProp, TextStyle, ViewStyle } from 'react-native';
@@ -20,11 +20,17 @@ const MAPPING = {
   'chart.bar.fill': 'bar-chart',
   'barcode.viewfinder': 'view-array',
   'box.fill': 'inventory',
+  'shelves.fill': 'shelves',
 } as const;
 
 // Separate mapping for FontAwesome icons
 const FA_MAPPING = {
   'barcode': 'barcode'
+} as const;
+
+const ION_MAPPING = {
+  'barcode': 'barcode',
+  "stats.fill" : "stats-chart-sharp"
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;
